@@ -4,6 +4,9 @@ import com.Ecommerce.entity.Product;
 import com.Ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +24,9 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getAllProducts(){
-        return service.getAllProducts();
+    public Page<Product> getAllProducts(@PageableDefault(size = 10,sort = "price") Pageable pageable)
+    {
+        return service.getAllProducts(pageable);
     }
 
     @GetMapping("/{id}")
