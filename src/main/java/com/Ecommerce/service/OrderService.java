@@ -9,6 +9,8 @@ import com.Ecommerce.repository.ProductRepository;
 import com.Ecommerce.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,6 +20,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(OrderService.class);
+
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
@@ -25,13 +30,20 @@ public class OrderService {
 
     @Transactional
     public void placeOrder(String email){
-        User user = userRepository.findByEmail(email).orElseThrow(()->
-                new RuntimeException("User not found"));
 
-      Cart cart=  cartRepository.findByUser(user).orElseThrow(()->
-              new RuntimeException("Cart not found"));
+        log.info("placeOrder() method called");
+        User user = userRepository.findByEmail(email).orElseThrow(()->{
+            log.warn("placeOrder() User Not found for Email: {}",email);
+              return  new RuntimeException("User not found");
+    });
+
+      Cart cart=  cartRepository.findByUser(user).orElseThrow(()-> {
+          log.warn("placeOrder() Cart Not found");
+          return new RuntimeException("Cart not found");
+      });
 
       if(cart.getItems().isEmpty()){
+          log.warn("placeOrder() Cart is empty");
           throw new RuntimeException("Cart is empty");
       }
       Order order= new Order();
@@ -43,6 +55,8 @@ public class OrderService {
 
           Product product= cartItem.getProduct();
           if(product.getQuantity()<cartItem.getQuantity()){
+              log.warn("placeOrder() Not enough stock for {}",product.getName());
+
               throw new RuntimeException("Not enough stock for "+product.getName());
           }
           product.setQuantity(product.getQuantity()-cartItem.getQuantity());
@@ -59,22 +73,31 @@ public class OrderService {
       }
       order.setTotalAmount(total);
       orderRepository.save(order);
-
+        log.info("placeOrder() Order placed successfully for user: {}, totalAmount: {}",
+                email,
+                total
+        );
       cart.getItems().clear();
       cartRepository.save(cart);
     }
 
     @Transactional
     public void cancelOrder(Long id, String email) {
+
+        log.info("cancelOrder() called - orderId: {}, user: {}", id, email);
         Order order= orderRepository.findById(id).orElseThrow(()->new RuntimeException("order not found"));
 
         if(!order.getUser().getEmail().equals(email)){
+            log.warn("cancelOrder() Unauthorized cancel attempt for orderId: {} by user: {}",
+                    id,
+                    email);
             throw new RuntimeException("You are not allowed to cancel this order");
 
 
         }
 
         if(order.getStatus()!= OrderStatus.CREATED){
+            log.warn("cancelOrder() Order is Created it cannot cancelled at this stage orderId: {} ",id);
             throw new RuntimeException("Order cannot be cancelled");
         }
 
@@ -85,9 +108,11 @@ public class OrderService {
             productRepository.save(product);
         }
         order.setStatus(OrderStatus.CANCELLED);
+        log.info("cancelOrder() successful - orderId: {}", id);
     }
 
     public List<OrderHistoryResponse> orderHistory(String email) {
+        log.info("orderHistory() called - user: {}", email);
 
         return orderRepository.findByUserEmailOrderByCreatedAtDesc(email).stream()
                 .map(order -> new OrderHistoryResponse(
