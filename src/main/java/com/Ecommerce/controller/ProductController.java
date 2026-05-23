@@ -2,6 +2,7 @@ package com.Ecommerce.controller;
 
 import com.Ecommerce.entity.Product;
 import com.Ecommerce.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ public class ProductController {
     private final ProductService service;
 
     @PostMapping
-    public Product addProduct(@RequestBody Product product){
+    public Product addProduct(@Valid @RequestBody Product product){
 
         return service.addProduct(product);
     }

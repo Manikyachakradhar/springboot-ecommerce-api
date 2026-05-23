@@ -3,6 +3,7 @@ package com.Ecommerce.controller;
 import com.Ecommerce.dto.AddToCartRequest;
 import com.Ecommerce.dto.CartResponses;
 import com.Ecommerce.service.CartService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,7 +17,7 @@ public class CartController {
 
     private final CartService cartService;
     @PostMapping("/add")
-    public ResponseEntity<String> addToCart(@RequestBody AddToCartRequest request ,Authentication authentication){
+    public ResponseEntity<String> addToCart(@Valid  @RequestBody AddToCartRequest request , Authentication authentication){
         String email= authentication.getName();
         cartService.addToCart(
                 email,

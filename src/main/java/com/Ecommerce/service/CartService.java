@@ -6,6 +6,9 @@ import com.Ecommerce.entity.Cart;
 import com.Ecommerce.entity.CartItem;
 import com.Ecommerce.entity.Product;
 import com.Ecommerce.entity.User;
+import com.Ecommerce.exception.CartNotFoundException;
+import com.Ecommerce.exception.InsufficientStockException;
+import com.Ecommerce.exception.ProductNotFoundException;
 import com.Ecommerce.repository.CartRepository;
 import com.Ecommerce.repository.ProductRepository;
 import com.Ecommerce.repository.UserRepository;
@@ -33,7 +36,7 @@ public class CartService {
         });
 
 
-        Product product= productRepository.findById(productId).orElseThrow(()->new RuntimeException("product is not found"));
+        Product product= productRepository.findById(productId).orElseThrow(()->new ProductNotFoundException("product is not found"));
         Optional<CartItem> existingItems= cart.getItems()
                 .stream()
                 .filter(item ->
@@ -44,7 +47,7 @@ public class CartService {
        int availableQuantity= product.getQuantity();
        int existingQuantity= existingItems.map(CartItem::getQuantity).orElse(0);
        if(existingQuantity+quantity>availableQuantity){
-           throw new RuntimeException("Only "+availableQuantity+" items available in stock");
+           throw new InsufficientStockException("Only "+availableQuantity+" items available in stock");
        }
         if(existingItems.isPresent()){
             CartItem item = existingItems.get();
@@ -63,7 +66,7 @@ public class CartService {
     public CartResponses getCart(String email) {
 
         User user = userRepository.findByEmail(email).orElseThrow();
-        Cart cart= cartRepository.findByUser(user).orElseThrow(()->new RuntimeException("Cart not foud"));
+        Cart cart= cartRepository.findByUser(user).orElseThrow(()->new CartNotFoundException("Cart not foud"));
         List<CartItemResponses> cartItemResponses=cart.getItems().stream().map(item ->
                 new CartItemResponses(
                         item.getProduct().getId(),
