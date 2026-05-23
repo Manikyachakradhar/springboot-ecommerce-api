@@ -3,6 +3,10 @@ package com.Ecommerce.service;
 import com.Ecommerce.dto.OrderHistoryResponse;
 import com.Ecommerce.dto.OrderItemResponse;
 import com.Ecommerce.entity.*;
+import com.Ecommerce.exception.CartNotFoundException;
+import com.Ecommerce.exception.EmptyCartException;
+import com.Ecommerce.exception.InsufficientStockException;
+import com.Ecommerce.exception.UserNotFoundException;
 import com.Ecommerce.repository.CartRepository;
 import com.Ecommerce.repository.OrderRepository;
 import com.Ecommerce.repository.ProductRepository;
@@ -34,17 +38,17 @@ public class OrderService {
         log.info("placeOrder() method called");
         User user = userRepository.findByEmail(email).orElseThrow(()->{
             log.warn("placeOrder() User Not found for Email: {}",email);
-              return  new RuntimeException("User not found");
+              return  new UserNotFoundException("User not found");
     });
 
       Cart cart=  cartRepository.findByUser(user).orElseThrow(()-> {
           log.warn("placeOrder() Cart Not found");
-          return new RuntimeException("Cart not found");
+          return new CartNotFoundException("Cart not found");
       });
 
       if(cart.getItems().isEmpty()){
           log.warn("placeOrder() Cart is empty");
-          throw new RuntimeException("Cart is empty");
+          throw new EmptyCartException("Cart is empty");
       }
       Order order= new Order();
       order.setUser(user);
@@ -57,7 +61,7 @@ public class OrderService {
           if(product.getQuantity()<cartItem.getQuantity()){
               log.warn("placeOrder() Not enough stock for {}",product.getName());
 
-              throw new RuntimeException("Not enough stock for "+product.getName());
+              throw new InsufficientStockException("Not enough stock for "+product.getName());
           }
           product.setQuantity(product.getQuantity()-cartItem.getQuantity());
 

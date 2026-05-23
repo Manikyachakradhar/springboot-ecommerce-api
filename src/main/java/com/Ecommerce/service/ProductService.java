@@ -1,6 +1,7 @@
 package com.Ecommerce.service;
 
 import com.Ecommerce.entity.Product;
+import com.Ecommerce.exception.ProductNotFoundException;
 import com.Ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class ProductService {
         return repository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Product not found for id: {}", id);
-                    return new RuntimeException("Product not found");
+                    return new ProductNotFoundException("Product not found");
                 });
     }
 
@@ -45,7 +46,7 @@ public class ProductService {
     try {
        repository.findById(id)
                 .orElseThrow(() -> {
-                    return new RuntimeException("Product not found");
+                    return new ProductNotFoundException("Product not found");
                 });
         repository.deleteById(id);
         log.info("deleteProduct() called - Deleting productId: {}", id);
